@@ -4,22 +4,28 @@ const express = require('express');
 const app = express();
 const port = 3000;
 
-const usernames = [
-  'KenjiVN',
-  'NoobBui',
-  'MrDat2009',
-  'HuyGamerX',
-  'DragonBoy99',
-  'nghiemtuan123',
-  'Anhhacker1',
-  'Quang_TNT',
-  'MinhHoangMC',
-  'proplayervn',
+let usernames = [
+  'KenjiVN', 'NoobBui', 'MrDat2009', 'HuyGamerX',
+  'DragonBoy99', 'nghiemtuan123', 'Anhhacker1',
+  'Quang_TNT', 'MinhHoangMC', 'proplayervn',
 ];
 
-let botName = usernames[Math.floor(Math.random() * usernames.length)];
+let usedNames = new Set(); // Tránh trùng bot khi restart
+
+function pickBotName() {
+  const available = usernames.filter(name => !usedNames.has(name));
+  if (available.length === 0) {
+    usedNames.clear(); // Reset nếu hết tên
+    return pickBotName();
+  }
+  const name = available[Math.floor(Math.random() * available.length)];
+  usedNames.add(name);
+  return name;
+}
 
 function createBot() {
+  const botName = pickBotName();
+
   const bot = mineflayer.createBot({
     host: 'BonvaBao123.aternos.me',
     port: 34742,
@@ -30,36 +36,34 @@ function createBot() {
   bot.loadPlugin(pathfinder);
 
   bot.once('spawn', () => {
-    console.log(`${bot.username} đã vào game.`);
+    console.log(`✅ ${bot.username} đã vào game.`);
 
-    const regDelay = getRandomInt(5000, 7000);
-    const loginDelay = regDelay + getRandomInt(1000, 2000);
-
-    setTimeout(() => bot.chat('/reg concacduma concacduma'), regDelay);
-    setTimeout(() => bot.chat('/login concacduma'), loginDelay);
+    const loginDelay = getRandomInt(8000, 10000);
+    setTimeout(() => {
+      console.log(`🔐 ${bot.username} đang gửi lệnh /login`);
+      bot.chat('/login concacduma');
+    }, loginDelay);
 
     startRandomBehavior(bot);
     scheduleBotRestart();
   });
 
+  bot.on('kicked', (reason) => {
+    console.log(`❌ Bot ${bot.username} bị kick: ${reason}`);
+  });
+
   bot.on('error', (err) => {
-    console.error('Lỗi bot:', err.message);
+    console.error(`⚠️ Lỗi bot ${bot.username}:`, err.message);
     if (err.code === 'ECONNRESET') {
-      console.log('→ Mất kết nối (ECONNRESET), sẽ khởi động lại bot sau 5s...');
-      setTimeout(() => {
-        process.exit(); // Render sẽ tự restart
-      }, 5000);
+      console.log(`→ Sẽ thử kết nối lại sau 5s...`);
+      setTimeout(() => createBot(), 5000);
     }
   });
 
   bot.on('end', () => {
-    console.log(`${bot.username} đã rời khỏi server. Đang tạo lại bot...`);
-    botName = usernames[Math.floor(Math.random() * usernames.length)];
-    const respawnDelay = getRandomInt(5000, 7000);
-    setTimeout(createBot, respawnDelay);
+    console.log(`🔁 ${bot.username} đã rời server. Restart bot...`);
+    setTimeout(createBot, getRandomInt(5000, 7000));
   });
-
-  return bot;
 }
 
 function startRandomBehavior(bot) {
@@ -96,17 +100,17 @@ function scheduleBotRestart() {
   const min = 60 * 60 * 1000;        // 1 giờ
   const max = 3 * 60 * 60 * 1000;    // 3 giờ
   const delay = getRandomInt(min, max);
-  console.log(`Bot sẽ đổi tên và khởi động lại sau ${Math.floor(delay / 60000)} phút.`);
-  setTimeout(() => process.exit(), delay); // Render sẽ tự restart bot
+  console.log(`⏰ Bot sẽ đổi tên và restart sau ${Math.floor(delay / 60000)} phút.`);
+  setTimeout(() => process.exit(), delay);
 }
 
 function getRandomInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-// Uptime server dùng được với UptimeRobot (chạy trên Render)
+// UptimeRobot ping
 app.get('/', (req, res) => res.send('Bot online!'));
-app.listen(port, '0.0.0.0', () => console.log(`Uptime server mở tại http://0.0.0.0:${port}`));
+app.listen(port, '0.0.0.0', () => console.log(`🌐 Uptime server chạy tại http://0.0.0.0:${port}`));
 
-// Khởi tạo bot lần đầu
+// Start
 createBot();
