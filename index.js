@@ -36,17 +36,18 @@ function createBot() {
   bot.loadPlugin(pathfinder);
 
   bot.once('spawn', () => {
-    console.log(`✅ ${bot.username} đã vào game.`);
+  console.log(`✅ ${bot.username} đã vào game.`);
 
-    const loginDelay = getRandomInt(8000, 10000);
-    setTimeout(() => {
-      console.log(`🔐 ${bot.username} đang gửi lệnh /login`);
-      bot.chat('/login concacduma');
-    }, loginDelay);
+  const loginDelay = getRandomInt(8000, 10000);
+  setTimeout(() => {
+    console.log(`🔐 ${bot.username} đang gửi lệnh /reg và /login`);
+    bot.chat('/register concacduma concacduma');
+    setTimeout(() => bot.chat('/login concacduma'), 1000); // Đợi 1s sau khi /register
+  }, loginDelay);
 
-    startRandomBehavior(bot);
-    scheduleBotRestart();
-  });
+  startRandomBehavior(bot);
+  scheduleBotRestart();
+});
 
   bot.on('kicked', (reason) => {
     console.log(`❌ Bot ${bot.username} bị kick: ${reason}`);
