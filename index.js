@@ -27,8 +27,8 @@ function createBot() {
   const botName = pickBotName();
 
   const bot = mineflayer.createBot({
-    host: 'BonvaBao123.aternos.me',
-    port: 34742,
+    host: 'EL-GATO-CAT.aternos.me',
+    port: 16008,
     username: botName,
     version: false,
   });
